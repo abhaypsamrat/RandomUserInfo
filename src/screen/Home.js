@@ -4,141 +4,121 @@ import {
   Text,
   StyleSheet,
   Image,
-  ActivityIndicator,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
+import {useCart} from './CartContext';
 
 export default function Home() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState([]);
+  const {cart, addToCart, removeFromCart} = useCart();
 
-  // Fetch API Data
   const fetchData = async () => {
     try {
-      const response = await fetch('https://randomuser.me/api/?results=1'); 
+      const response = await fetch('https://dummyjson.com/products');
       const result = await response.json();
-      setData(result.results[0]); 
-      setLoading(false);
+      setData(result.products.slice(0, 10));
+      console.log(result.products.slice(0, 1));
     } catch (error) {
       console.error('Error fetching data:', error);
-      setLoading(false);
     }
   };
 
-  // Automatically refresh the data every 30 seconds
   useEffect(() => {
-    fetchData(); 
-    const intervalId = setInterval(fetchData, 30000); 
-
-    // Clear the interval on component unmount
-    return () => clearInterval(intervalId);
+    fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007BFF" />
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    );
-  }
-
-  if (!data) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Failed to load data.</Text>
-      </View>
-    );
-  }
+  const isInCart = id => cart.some(item => item.id === id);
 
   return (
     <View style={styles.container}>
-      {/* Refresh Button */}
-      <TouchableOpacity style={styles.refreshButton} onPress={fetchData}>
-        <Text style={styles.refreshButtonText}>Refresh</Text>
-      </TouchableOpacity>
-
-      {/* Profile Image */}
-      <Image source={{uri: data.picture.large}} style={styles.image} />
-
-      {/* Full Name */}
-      <Text style={styles.name}>
-        {data.name.title} {data.name.first} {data.name.last}
-      </Text>
-
-      {/* Age */}
-      <Text style={styles.info}>Age: {data.dob.age}</Text>
-
-      {/* Address */}
-      <Text style={styles.info}>
-        Address: {data.location.street.number}, {data.location.street.name},{' '}
-        {data.location.city}, {data.location.state}, {data.location.country}
-      </Text>
-
-      {/* Phone Number */}
-      <Text style={styles.info}>Phone: {data.phone}</Text>
+      <ScrollView contentContainerStyle={styles.list}>
+        {data.map(item => (
+          <View key={item.id} style={styles.cardContainer}>
+            <View style={styles.card}>
+              <Image source={{uri: item.thumbnail}} style={styles.image} />
+              <View style={styles.details}>
+                <Text numberOfLines={2}
+                style={styles.title}>{item.title}</Text>
+                <Text style={styles.price}>₹ {item.price}</Text>
+                {isInCart(item.id) ? (
+                  <TouchableOpacity
+                    style={[styles.button, styles.removeButton]}
+                    onPress={() => removeFromCart(item.id)}>
+                    <Text style={styles.buttonText}>Remove</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => addToCart(item)}>
+                    <Text style={styles.buttonText}>Add</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#f7f7f7',
+    padding: 10,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f7f7f7',
+  list: {
+    paddingBottom: 20,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f7f7f7',
+  cardContainer: {
+    width: '48%',
+    margin: '1%',
   },
-  errorText: {
-    fontSize: 18,
-    color: 'red',
-  },
-  loadingText: {
-    fontSize: 18,
-    marginTop: 10,
-    color: '#007BFF',
+  card: {
+    // flexDirection: 'row',
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
   },
   image: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 20,
+    width: 80,
+    height: 80,
+    borderRadius: 10,
   },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
+  details: {
+    // flex: 1,
+    marginLeft: 10,
+    justifyContent: 'center',
   },
-  info: {
+  title: {
     fontSize: 16,
-    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  price: {
+    fontSize: 14,
+    color: '#888',
     marginVertical: 5,
-    color: '#333',
   },
-  refreshButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
+  button: {
     backgroundColor: '#28a745',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    alignSelf: 'flex-start',
   },
-  refreshButtonText: {
+  removeButton: {
+    backgroundColor: '#dc3545',
+  },
+  buttonText: {
     color: '#fff',
+    fontSize: 14,
     fontWeight: 'bold',
-    fontSize: 16,
   },
 });
