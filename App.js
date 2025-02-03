@@ -1,66 +1,68 @@
 import React from 'react';
+import {
+  View,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Dimensions,
+} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
-import {CartProvider, useCart} from './src/screen/CartContext';
-import Home from './src/screen/Home';
-import Cart from './src/screen/Cart';
-import {TouchableOpacity, View, Text, StyleSheet} from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import ScrollableImages from './src/component/ScrollableImages';
+import LoginModel from './src/component/Login';
+import HomeScreen from './src/component/HomeScreen';
 
 const Stack = createStackNavigator();
 
-const CartIcon = ({navigation}) => {
-  const {cart} = useCart(); // Access cart from context
-
-  return (
-    <TouchableOpacity
-      style={styles.cartIconContainer}
-      onPress={() => navigation.navigate('Cart')}>
-      <Icon name="cart-outline" size={25} color="#000" />
-      {cart.length > 0 && (
-        <View style={styles.cartBadge}>
-          <Text style={styles.cartBadgeText}>{cart.length}</Text>
-        </View>
-      )}
-    </TouchableOpacity>
-  );
-};
-
 export default function App() {
   return (
-    <CartProvider>
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={({navigation}) => ({
-            headerRight: () => <CartIcon navigation={navigation} />,
-          })}>
-          <Stack.Screen name="Home" component={Home} />
-          <Stack.Screen name="Cart" component={Cart} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </CartProvider>
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{headerShown: false}}>
+        <Stack.Screen name="Main" component={MainScreen} />
+        <Stack.Screen name="Home" component={HomeScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
+const MainScreen = () => {
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
+        {/* Scrollable Images */}
+        <View style={styles.scrollableContainer}>
+          <ScrollableImages />
+        </View>
+
+        {/* Login Model */}
+        <View style={styles.loginContainer}>
+          <LoginModel />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
 const styles = StyleSheet.create({
-  cartIconContainer: {
-    marginRight: 15,
-    position: 'relative',
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
   },
-  cartBadge: {
-    position: 'absolute',
-    top: -5,
-    right: -10,
-    backgroundColor: 'red',
-    borderRadius: 10,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  scrollContent: {
+    flexGrow: 1,
   },
-  cartBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
+  scrollableContainer: {
+    height: Dimensions.get('window').height / 2, // Half the screen height for images
+    zIndex: 1,
+  },
+  loginContainer: {
+    minHeight: Dimensions.get('window').height / 2, // At least half the screen height for login
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    elevation: 5, // Shadow for better separation
+    zIndex: 2,
   },
 });
